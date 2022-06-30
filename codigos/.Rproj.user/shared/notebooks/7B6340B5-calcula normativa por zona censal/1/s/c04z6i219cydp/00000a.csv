@@ -1,5 +1,0 @@
-"0","zonas_local_area_analisis$vivs_perm_zonas[is.na(zonas_local_area_analisis$vivs_perm_zonas)] <- 0
-"
-"2","Error in `[[<-.data.frame`(`*tmp*`, i, value = numeric(0)) : 
-  replacement has 0 rows, data has 246
-"

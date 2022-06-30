@@ -1,4 +1,0 @@
-"0","modelo_lineal_oferta = lm(log(departamento + 0.001) ~ dist_centro + vivs_permitidas, data = tabla_calibracion_modelo)"
-"0","summary(modelo_lineal)"
-"2","Error in summary(modelo_lineal) : object 'modelo_lineal' not found
-"

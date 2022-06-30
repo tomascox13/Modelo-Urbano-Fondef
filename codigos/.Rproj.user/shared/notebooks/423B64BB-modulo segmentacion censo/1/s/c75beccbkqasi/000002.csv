@@ -1,2 +1,0 @@
-"0","#para cargar todos los datos del censo (no alcanza la memoria), filtra por región 9 y guarda como RDS:"
-"0","Microdato_Censo2017_Personas = read.csv(""C:/Users/tomas/OneDrive/Censo2017/Microdato_Censo2017-Personas/Microdato_Censo2017-Personas.csv"",sep = "";"")"

@@ -1,7 +1,0 @@
-"0","#Calcula indicador de densidad:"
-"0","Parametros_Norma <- mutate(Parametros_Norma, INDIC_DENS_vivha = ifelse(USO_HABIT == ""NO"", 0, ifelse(dens_max_vivha > 0, dens_max_vivha,ifelse(!is.na(dens_max_habha), (dens_max_habha / 4),(coef_constr_max * 10000 * 0.7 / 70)))))"
-"0","   "
-"0","# en caso que el indicador sea NA (no se puedo calcular con los parámetros indicados), se le asigna 500. Esto resulta de aplicar a un terreno de 2000 m2 una ocupación de 0.5, y rasante de 70 grados, lo que da un edificio de 10 pisos, con 1.000 m2 por planta, 70% de sup util y unidades de 60 m2 promedio. Esto da 100 unidades, lo que llevado a Há, da 500 unidades:      "
-"0","Parametros_Norma$INDIC_DENS_vivha[is.na(Parametros_Norma$INDIC_DENS_vivha)] = 500"
-"0",""
-"0",""

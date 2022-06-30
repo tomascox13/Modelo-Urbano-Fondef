@@ -1,5 +1,0 @@
-"0","#tabla de unidades por zona censal:"
-"0","tabla_unids_zona = readRDS(paste0(dir_datos, ""/output/tabla_unids_zona"",p_caso_de_estudio,"".RDS""))"
-"0",""
-"0","#atributos por zona censal (todas las zonas):"
-"0","tbl_atributos_zonas = readRDS(paste0(dir_datos, ""/output/tabla_atribs_zonasloc"",p_caso_de_estudio,"".RDS"")) "

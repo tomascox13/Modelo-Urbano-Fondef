@@ -1,1 +1,0 @@
-"0","Zonas_Norma = merge(Zonas_Norma, Parametros_Norma[c(""ZONA"",""CUT"",""INDIC_DENS_vivha"")], by = c( ""CUT"",""ZONA""), all.x = TRUE)"

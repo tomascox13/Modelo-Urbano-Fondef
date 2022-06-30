@@ -1,4 +1,0 @@
-"0","a = merge(zonas_local_area_analisis, hogs_zonas, by = ""GEOCODIGO"", all.x = TRUE)
-"
-"2","Error in fix.by(by.y, y) : 'by' must specify a uniquely valid column
-"

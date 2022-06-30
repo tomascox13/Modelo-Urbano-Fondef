@@ -1,2 +1,0 @@
-"0","ggplot(tabla_ajuste_modelo)+"
-"0","  geom_point( aes(x = obs, y = pred))"

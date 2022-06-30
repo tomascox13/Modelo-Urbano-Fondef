@@ -1,6 +1,6 @@
 {
     "id": "00123317",
-    "path": "C:/Users/tomas/OneDrive/Academico FAU/FONDEF Electromovilidad/MODELOS/codigos/modulo poblacion.Rmd",
+    "path": "C:/Users/tomas/OneDrive/Academico FAU/FONDEF Electromovilidad/Modelo-Urbano-Fondef/codigos/modulo poblacion.Rmd",
     "project_path": "modulo poblacion.Rmd",
     "type": "r_markdown",
     "hash": "1861495400",
@@ -15,7 +15,7 @@
         "source_window_id": "",
         "Source": "Source",
         "cursorPosition": "75,88",
-        "scrollLine": "72"
+        "scrollLine": "0"
     },
     "folds": "",
     "lastKnownWriteTime": 1656545020,
