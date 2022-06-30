@@ -1,0 +1,21 @@
+"0","rm(centro, norma_zonaloc,roads, tbl_zonas,zonas_local_area_analisis, calcula_dist_x_red)"
+"2","Warning in rm(centro, norma_zonaloc, roads, tbl_zonas, zonas_local_area_analisis,  :"
+"2","
+ "
+"2"," object 'centro' not found
+"
+"2","Warning in rm(centro, norma_zonaloc, roads, tbl_zonas, zonas_local_area_analisis,  :"
+"2","
+ "
+"2"," object 'norma_zonaloc' not found
+"
+"2","Warning in rm(centro, norma_zonaloc, roads, tbl_zonas, zonas_local_area_analisis,  :"
+"2","
+ "
+"2"," object 'roads' not found
+"
+"2","Warning in rm(centro, norma_zonaloc, roads, tbl_zonas, zonas_local_area_analisis,  :"
+"2","
+ "
+"2"," object 'calcula_dist_x_red' not found
+"

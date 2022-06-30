@@ -1,0 +1,12 @@
+"0","```r
+library(dodgr)
+library(sf)
+library(osmdata)
+library(tmap)
+library(leaflet)
+library(mapedit)
+library (osmdata)
+library(dplyr)
+
+dir_trabajo <- (\"C:/Users/tomas/OneDrive/Tiempos de Viaje en R/codigo general\")
+```"

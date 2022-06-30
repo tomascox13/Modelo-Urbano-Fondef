@@ -1,0 +1,9 @@
+"0","codigos_comunas_ine = read.csv(""../dato/input/codigos_comunas_ine.csv"",sep="";"")
+"
+"2","Warning in file(file, ""rt"") :"
+"2","
+ "
+"2"," cannot open file '../dato/input/codigos_comunas_ine.csv': No such file or directory
+"
+"2","Error in file(file, ""rt"") : cannot open the connection
+"

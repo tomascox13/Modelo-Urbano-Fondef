@@ -1,0 +1,5 @@
+"0","pob_x_ano_36_50 <- as.data.frame(spline(x = pob_x_ano_02_35$ano, y = pob_x_ano_02_35$poblacion, n = 15, method = ""natural"", xmin = 2036, xmax = 2050, ties = mean))"
+"0",""
+"0","colnames(pob_x_ano_36_50) = c(""ano"",""poblacion"")"
+"0","pob_x_ano_02_50 = rbind(pob_x_ano_02_35, pob_x_ano_36_50)"
+"0",""

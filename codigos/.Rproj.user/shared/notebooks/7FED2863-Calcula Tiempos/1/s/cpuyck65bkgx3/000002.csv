@@ -1,0 +1,30 @@
+"0","```r
+```r
+ptos_int_vertices <- read.csv(\Papudo/vertices_ptos_int.csv\,sep=\;\)
+
+
+from_auto_iso <- as.character (ptos_int_vertices$Vertice_Auto)
+to_auto_iso <- vertices_auto$id
+
+from_foot_iso <- as.character (ptos_int_vertices$Vertice_Caminata)
+to_foot_iso <- vertices_foot$id
+
+distancesIso_foot <- dodgr_distances(graph_foot, from = from_foot_iso, to = to_foot_iso)
+distancesIso_auto <- dodgr_distances(graph_auto, from = from_auto_iso, to = to_auto_iso)
+
+distancesIso_foot_df <- as.data.frame(distancesIso_foot)
+colnames(distancesIso_foot_df) <- vertices_foot$id
+row.names(distancesIso_foot_df) <- ptos_int_vertices$Punto_de_Interes
+distancesIso_foot_df <- t(distancesIso_foot_df)
+
+distancesIso_auto_df <- as.data.frame(distancesIso_auto)
+colnames(distancesIso_auto_df) <- vertices_auto$id
+row.names(distancesIso_auto_df) <- ptos_int_vertices$Punto_de_Interes
+distancesIso_auto_df <- t(distancesIso_auto_df)
+
+write.csv(distancesIso_foot_df,\Papudo/isodists_foot.csv\)
+write.csv(distancesIso_auto_df,\Papudo/isodists_auto.csv\)
+
+########################## hasta aca
+```
+```"

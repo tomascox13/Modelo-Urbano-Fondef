@@ -1,0 +1,2 @@
+"0","# genera ID de hogar:"
+"0","Microdato_Censo2017_Personas_AreaEstudio = mutate(Microdato_Censo2017_Personas_AreaEstudio, ID_HOG = paste0(GEOCOD,""-"",NVIV,""-"",NHOGAR))  "

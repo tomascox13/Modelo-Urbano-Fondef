@@ -1,0 +1,56 @@
+
+https://cran.r-project.org/web/packages/dodgr/vignettes/dodgr.html
+
+carga librerias, paths y parametros:
+```{r message=FALSE, warning=FALSE}
+source(knitr::purl("./librerias paths y parametros.Rmd", quiet=TRUE))
+```
+
+función:
+```{r}
+
+# origenes, destinos y red vial deben estar en 4326.
+# origenes y destinos deben tener un campo "ID".
+
+calcula_dist_x_red = function(origenes,destinos,red_vial){
+  
+  origenes = st_transform(origenes,crs = 32719)
+  destinos = st_transform(destinos,crs = 32719)
+
+  
+  #construye la red para analisis de tiempos de viaje y extrae vértices:
+  graph_auto = weight_streetnet (red_vial, wt_profile = "motorcar")
+  graph_auto$d_weighted <- graph_auto$d 
+  vertices_auto <- dodgr_vertices (graph_auto)
+  vertices_auto_sf <- st_transform(st_as_sf (vertices_auto[c("id","x","y")],coords=c("x","y"), crs = 4326 ), crs = 32719 )
+  names(vertices_auto_sf) = c("id_vertice","geometry")  
+  
+  # le asigna a cada zona el vertice más cercano:
+  origenes = st_join(origenes, vertices_auto_sf, st_nearest_feature)
+  
+  # asigna a los destinos el vertice más cercano:
+  destinos = st_join(destinos, vertices_auto_sf, st_nearest_feature)
+  
+  # string que lista los id de todos lo originenes (ids de los vertices asociables a cada centroide)
+  from_auto = as.character (origenes$id_vertice)
+  to_auto = as.character (destinos$id_vertice)
+   
+  distancesOD_auto = as.data.frame(dodgr_distances(graph_auto, from = from_auto, to = to_auto))
+  distancesOD_auto$distMC <- apply(distancesOD_auto,1,FUN=min)
+  distancesOD_auto = distancesOD_auto[c("distMC")]
+  
+  distancesOD_auto$ID = origenes$ID
+  names(distancesOD_auto) = c("distMC","ID")
+   
+  return(distancesOD_auto)
+}
+
+```
+
+guarda la función:
+```{r}
+saveRDS(calcula_dist_x_red, "../datos/output/funcion calculo distancia al mas cercano por la red.RDS")
+```
+
+
+

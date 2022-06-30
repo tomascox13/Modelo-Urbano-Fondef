@@ -1,0 +1,5 @@
+"0","proyecciones_2002_2035 = read_excel(""../datos/input/estimaciones-y-proyecciones-2002-2035-comuna-y-área-urbana-y-rural.xlsx"")
+"
+"2","Error in read_excel(""../datos/input/estimaciones-y-proyecciones-2002-2035-comuna-y-área-urbana-y-rural.xlsx"") : 
+  could not find function ""read_excel""
+"

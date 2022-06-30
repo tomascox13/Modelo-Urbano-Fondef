@@ -1,0 +1,8 @@
+"0","cant_cols = ncol(proyecciones_2002_2035_comuna)"
+"0",""
+"0","pob_x_ano_02_35 = as.data.frame( colSums(proyecciones_2002_2035_comuna_urb[,(cant_cols-33):cant_cols]))"
+"0","names(pob_x_ano_02_35) = c(""poblacion"")"
+"0",""
+"0","pob_x_ano_02_35$ano = 2002:2035"
+"0","rownames(pob_x_ano_02_35) = NULL"
+"0",""

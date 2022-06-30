@@ -1,0 +1,83 @@
+
+Descripcion:
+Toma Excel de proyecciones de población de INE 2002-2035 y las filtra por comuna objetivo y sector urbano. Genera extrapolación hasta 2050.
+
+Parámetros a usar (se definen en codigo "librerias paths y parametros.Rmd"):
+p_caso_de_estudio
+p_comunas
+
+
+
+
+carga librerias, paths y parametros:
+```{r message=FALSE, warning=FALSE}
+source(knitr::purl("./librerias paths y parametros.Rmd", quiet=TRUE))
+```
+
+carga proyecciones INE:
+extraido originalmente de: 
+https://www.ine.cl/estadisticas/sociales/demografia-y-vitales/proyecciones-de-poblacion
+```{r}
+
+proyecciones_2002_2035 = read_excel("../datos/input/estimaciones-y-proyecciones-2002-2035-comuna-y-área-urbana-y-rural.xlsx")
+
+```
+
+Selecciona ciertas comunas:
+```{r}
+#subset de comunas:
+proyecciones_2002_2035_comuna = proyecciones_2002_2035[proyecciones_2002_2035$`Nombre Comuna` %in% p_comunas,]
+
+#subset de cierto atributo: solo lo urbano:
+proyecciones_2002_2035_comuna_urb = subset(proyecciones_2002_2035_comuna, `Area (1=Urbano 2=Rural)`== 1)
+
+```
+
+genera df con población por año:
+```{r}
+cant_cols = ncol(proyecciones_2002_2035_comuna)
+
+pob_x_ano_02_35 = as.data.frame( colSums(proyecciones_2002_2035_comuna_urb[,(cant_cols-33):cant_cols]))
+names(pob_x_ano_02_35) = c("poblacion")
+
+pob_x_ano_02_35$ano = 2002:2035
+rownames(pob_x_ano_02_35) = NULL
+
+```
+
+grafica la población:
+```{r}
+ggplot(data = pob_x_ano_02_35) +
+  geom_line(aes(x=ano, y=poblacion)) +
+  theme_minimal()
+  
+```
+extrapolación de poblacion:
+https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/splinefun
+
+```{r}
+pob_x_ano_36_50 <- as.data.frame(spline(x = pob_x_ano_02_35$ano, y = pob_x_ano_02_35$poblacion, n = 15, method = "natural", xmin = 2036, xmax = 2050, ties = mean))
+
+colnames(pob_x_ano_36_50) = c("ano","poblacion")
+pob_x_ano_02_50 = rbind(pob_x_ano_02_35, pob_x_ano_36_50)
+
+```
+
+grafica la población 2002 a 2050:
+```{r}
+ggplot(data = pob_x_ano_02_50) +
+  geom_line(aes(x=ano, y=poblacion))+
+  theme_minimal()
+  
+```
+
+guarda resultados:
+```{r}
+saveRDS(pob_x_ano_02_50,"../datos/output/poblacion_2002_2050_",p_caso_de_estudio,".RDS")
+```
+
+elimina objetos:
+```{r}
+rm(pob_x_ano_02_35,pob_x_ano_02_50,pob_x_ano_36_50,proyecciones_2002_2035,proyecciones_2002_2035_comuna,proyecciones_2002_2035_comuna_urb)
+```
+

@@ -1,0 +1,97 @@
+
+carga librerias, paths y parametros:
+```{r message=FALSE, warning=FALSE}
+source(knitr::purl("./librerias paths y parametros.Rmd", quiet=TRUE))
+```
+
+fecha para añadir a nombre de archivos de output:
+```{r}
+fecha_calibracion = Sys.Date()
+```
+
+carga datos:
+```{r}
+#tabla de unidades por zona censal:
+tabla_unids_zona = readRDS(paste0("../datos/output/tabla_unids_zona",p_caso_de_estudio,".RDS"))
+
+#atributos por zona censal (todas las zonas):
+tbl_atributos_zonas = readRDS(paste0( "../datos/output/tabla_atribs_zonasloc",p_caso_de_estudio,".RDS")) 
+```
+
+combina en una sola tabla de calibración:
+```{r}
+tabla_calibracion_modelo = merge(tbl_atributos_zonas,tabla_unids_zona, by = "GEOCODIGO", all.x = TRUE)
+
+tabla_calibracion_modelo$casa[is.na(tabla_calibracion_modelo$casa)] = 0
+tabla_calibracion_modelo$departamento[is.na(tabla_calibracion_modelo$departamento)] = 0
+tabla_calibracion_modelo$otro[is.na(tabla_calibracion_modelo$otro)] = 0
+
+tabla_calibracion_modelo = st_drop_geometry(tabla_calibracion_modelo)
+
+
+```
+
+
+calibración de modelo:
+
+modelo lineal:
+```{r}
+modelo_lineal_oferta = lm(log(departamento + 0.001) ~ dist_centro + vivs_permitidas, data = tabla_calibracion_modelo)
+summary(modelo_lineal_oferta)
+```
+
+random forest:
+```{r}
+sample = sample.split(tabla_calibracion_modelo$GEOCODIGO, SplitRatio = 0.8)
+train = subset(tabla_calibracion_modelo, sample == TRUE)
+valid = subset(tabla_calibracion_modelo, sample == FALSE)
+
+control <- trainControl(method='repeatedcv', 
+                        number=10, 
+                        repeats=10)
+
+modelo_rf_oferta <- randomForest(log(departamento + 0.001) ~ dist_centro + vivs_permitidas, data = train, trControl = control)
+
+
+```
+
+
+prediccion y ajuste
+```{r}
+#modelo = modelo_lineal_oferta
+#tabla_est = tabla_calibracion_modelo
+modelo = modelo_rf_oferta
+tabla_est = valid
+
+#tabla con predicciones:
+tabla_ajuste_modelo = tabla_est[c()]
+tabla_ajuste_modelo$obs = tabla_est$departamento
+tabla_ajuste_modelo$pred = exp(predict(modelo,tabla_est)) # ojo exp
+
+# r2:
+r2 = cor(tabla_ajuste_modelo$pred,tabla_ajuste_modelo$obs)^2
+# error medio:
+MAPE = mean(abs((tabla_ajuste_modelo$pred -  tabla_ajuste_modelo$obs)*100/ (tabla_ajuste_modelo$obs+1)))
+df_ajuste = data.frame(r2,MAPE)
+
+```
+
+```{r}
+ggplot(tabla_ajuste_modelo)+
+  geom_point( aes(x = obs, y = pred))
+```
+
+
+guarda modelo:
+```{r}
+modelo_a_guardar = "modelo_lineal_oferta_"
+
+saveRDS(modelo_lineal_oferta, paste0( "../datos/output/",modelo_a_guardar,p_caso_de_estudio,"_",fecha_calibracion,".RDS")) 
+
+write.csv(df_ajuste, paste0( "../datos/output/metricas_ajuste_",modelo_a_guardar,p_caso_de_estudio,"_",fecha_calibracion,".csv"),row.names = FALSE) 
+```
+
+```{r}
+rm(control, train, valid, tabla_unids_zona, df_ajuste, linear, modelo, modelo_lineal_oferta, modelo_rf_oferta, tabla_ajuste_modelo, tabla_calibracion_modelo, tabla_unids_zona, r2, MAPE, sample, modelo_a_guardar, tabla_est, tbl_atributos_zonas, fecha_calibracion)
+```
+

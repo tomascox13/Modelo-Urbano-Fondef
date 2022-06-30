@@ -1,0 +1,21 @@
+"0","```r
+
+# carga red vial desde shape extraido de osm:
+red_vial <- st_transform(read_sf(paste0(dir_trabajo,\"/shapes input/red_vial.shp\"),quiet=TRUE),crs = 4326)
+
+#carga shape de origenes destinos de viajes:
+Origenes_Destinos <- st_transform(read_sf(paste0(dir_trabajo,\"/shapes input/Origenes Destinos.shp\"),quiet=TRUE),crs = 4326)
+
+graph_auto <- weight_streetnet (red_vial, wt_profile = \"motorcar\")
+
+graph_auto$d_weighted <- graph_auto$d 
+
+vertices_auto <- dodgr_vertices (graph_auto)
+vertices_auto_sf <- st_as_sf (vertices_auto,coords=c(\"x\",\"y\"),crs=32719 )
+
+st_write(vertices_auto_sf,paste0(dir_trabajo,\"/shapes output/vertices_red_vial.shp\"),append = FALSE)
+
+#plot(st_geometry(vertices_auto_sf))
+
+
+```"

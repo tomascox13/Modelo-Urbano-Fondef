@@ -1,0 +1,1 @@
+"0","saveRDS(pob_x_ano_02_50, paste0(dir_datos, ""/output/poblacion_2002_2050_"",caso_de_estudio,"".RDS""))"

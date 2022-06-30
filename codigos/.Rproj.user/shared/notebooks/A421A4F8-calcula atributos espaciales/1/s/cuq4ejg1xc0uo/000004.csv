@@ -1,0 +1,5 @@
+"0","tbl_zonas = merge(tbl_zonas, norma_zonaloc[c(""GEOCODIGO"",""vivs_permitidas"")], by=""GEOCODIGO"",all.x = TRUE)
+"
+"2","Error in merge.sf(tbl_zonas, norma_zonaloc[c(""GEOCODIGO"", ""vivs_permitidas"")],  : 
+  merge on two sf objects not supported
+"

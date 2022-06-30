@@ -1,0 +1,3 @@
+"0","ggplot(data = pob_x_ano_02_50) +"
+"0","  geom_line(aes(x=ano, y=poblacion))+"
+"0","  theme_minimal()"

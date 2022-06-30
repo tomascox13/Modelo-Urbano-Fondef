@@ -1,0 +1,16 @@
+"0","```r
+#carga dicc de centros de zonas y el vÃ©rtice asociado: 
+centroszonas_vertices_auto <- read.csv(paste0(dir_trabajo,\"/shapes output/centroides_vertices_auto.csv\"))
+
+from_auto <- as.character (centroszonas_vertices_auto$TargetID)
+to_auto <- from_auto
+
+distancesOD_auto <- dodgr_distances(graph_auto, from = from_auto, to = to_auto)
+
+distancesOD_auto_df <- as.data.frame(distancesOD_auto)
+colnames(distancesOD_auto_df) <- centroszonas_vertices_auto$InputID
+row.names(distancesOD_auto_df) <- centroszonas_vertices_auto$InputID
+
+write.csv(distancesOD_auto_df,paste0(dir_trabajo,\"/shapes output/dists_OD_auto.csv\"))
+
+```"

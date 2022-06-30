@@ -1,0 +1,78 @@
+
+carga librerias, paths y parametros:
+```{r message=FALSE, warning=FALSE}
+source(knitr::purl("./librerias paths y parametros.Rmd", quiet=TRUE))
+```
+
+carga zonas/loc, shape y tabla normativa area de estudio,
+```{r message=FALSE, warning=FALSE}
+#para caso de Temuco:
+if(p_caso_de_estudio == "Temuco"){
+  zonas_local_area_analisis = st_read("../datos/input/shapes/shapes censo 2017 Araucania/area_estudio_temuco.shp", crs = 32719) 
+  Parametros_Norma = read_excel("../datos/input/IPT/Caso Temuco/Parametros Norma Temuco.xlsx")
+  Zonas_Norma = st_read("../datos/input/IPT/Caso Temuco/IPT_Temuco_PLasCasas_Cajon.shp", crs = 4326)
+  
+}
+#transforma a crs 32719:
+Zonas_Norma = st_transform(Zonas_Norma, crs = 32719)
+
+```
+
+calcula indicador de densidad máxima (viv/ha) en tabla de norma:
+```{r}
+#Calcula indicador de densidad:
+Parametros_Norma <- mutate(Parametros_Norma, INDIC_DENS_vivha = ifelse(USO_HABIT == "NO", 0, ifelse(dens_max_vivha > 0, dens_max_vivha,ifelse(!is.na(dens_max_habha), (dens_max_habha / 4),(coef_constr_max * 10000 * 0.7 / 70)))))
+   
+# en caso que el indicador sea NA (no se puedo calcular con los parámetros indicados), se le asigna 500. Esto resulta de aplicar a un terreno de 2000 m2 una ocupación de 0.5, y rasante de 70 grados, lo que da un edificio de 10 pisos, con 1.000 m2 por planta, 70% de sup util y unidades de 60 m2 promedio. Esto da 100 unidades, lo que llevado a Há, da 500 unidades:      
+Parametros_Norma$INDIC_DENS_vivha[is.na(Parametros_Norma$INDIC_DENS_vivha)] = 500
+
+
+```
+
+
+une shape de norma con tabla de parametros
+```{r}
+Zonas_Norma = merge(Zonas_Norma, Parametros_Norma[c("ZONA","CUT","INDIC_DENS_vivha")], by = c( "CUT","ZONA"), all.x = TRUE)
+```
+
+Calcula vivha y total de viviendas permitidas por zona/loc censal:
+```{r}
+#genera sf de zonas normativas con solo atributos a usar, y calcula area de cada zona:
+Zonas_Norma_inters = Zonas_Norma[c("ZONA","CUT","INDIC_DENS_vivha")]
+Zonas_Norma_inters$area_ha_zona = as.numeric(st_area(Zonas_Norma_inters) /10000)
+
+#intersecta zonas normativas con zonas/loc censales:
+Zonas_Norma_inters = st_intersection(Zonas_Norma_inters, zonas_local_area_analisis[c("GEOCODIGO")])
+# calcula área de cada fragmento de zona:
+Zonas_Norma_inters$area_ha_frag = as.numeric(st_area(Zonas_Norma_inters) /10000)
+
+#calcula cuántas viviendas se permiten en cada fragmento:
+Zonas_Norma_inters = mutate(Zonas_Norma_inters, vivs_frag = INDIC_DENS_vivha * area_ha_frag)
+
+#agrega la total de vivs por zona/loc censal:
+vivs_perm_zonas = aggregate(vivs_frag ~ GEOCODIGO, Zonas_Norma_inters, sum)
+names(vivs_perm_zonas) = c("GEOCODIGO","vivs_permitidas")
+# asigna total de viviendas a cada zona en sf original de zonas/loc:
+zonas_local_area_analisis = merge(zonas_local_area_analisis, vivs_perm_zonas, by = "GEOCODIGO", all.x = TRUE)
+zonas_local_area_analisis$vivs_permitidas[is.na(zonas_local_area_analisis$vivs_permitidas)] = 0
+# viviendas permitidas por ha en cada zona/loc:
+zonas_local_area_analisis$area_ha_zona = as.numeric(st_area(zonas_local_area_analisis) /10000)
+zonas_local_area_analisis = mutate(zonas_local_area_analisis, vivs_perm_ha = vivs_permitidas / area_ha_zona)
+
+
+```
+
+
+guarda sf y shp de zonas con cant de viviendas permitidas por zona:
+```{r}
+saveRDS(zonas_local_area_analisis, paste0( "../datos/output/zonas_local_con_vivs_permtid_",p_caso_de_estudio,".RDS"))  
+
+write_sf(zonas_local_area_analisis, paste0( "../datos/output/shapes/zonas_local_con_vivs_permtid_",p_caso_de_estudio,".shp"))  
+
+```
+
+```{r}
+rm(Parametros_Norma,vivs_perm_zonas,zonas_local_area_analisis,Zonas_Norma_inters)
+```
+
+

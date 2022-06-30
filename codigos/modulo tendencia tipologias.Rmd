@@ -1,0 +1,54 @@
+
+carga librerias, paths y parametros:
+```{r message=FALSE, warning=FALSE}
+source(knitr::purl("./librerias paths y parametros.Rmd", quiet=TRUE))
+```
+
+extraido de:
+https://www.observatoriourbano.cl/estadisticas-habitacionales/
+```{r}
+tipologias_2002_2017 = read_excel("../datos/input/PH Tipología_de_vivienda_por_region_y_comuna_Censo_2017_2002.xlsx")
+```
+
+subset de las comunas:
+```{r}
+cod_comunas = p_cod_comunas$Comuna
+tipologias_2002_2017_comunas =  tipologias_2002_2017 [tipologias_2002_2017$`Codigo INE Comuna` %in% cod_comunas,]
+
+```
+
+
+```{r}
+#calcula otros = los que no son ni depto ni casa:
+tipologias_2002_2017_comunas = mutate(tipologias_2002_2017_comunas, otros =  `Piezas en casa antigua o conventillo` + `Mediagua, mejora, Rancho o Choza` + `Vivienda Tradicional Indígena (ruka, pae pae u otras)` + `Móvil (carpa, casa rodante o similar)` + `Otro tipo de vivienda particular`)
+
+# resumen por censo y sector (urb, rural), para cada tipo:
+resumen_tipologias = aggregate(Casa ~ Año + Area, tipologias_2002_2017_comunas, sum )
+res_deptos = aggregate(`Departamento en edificio` ~ Año + Area, tipologias_2002_2017_comunas, sum )
+res_otros = aggregate(otros ~ Año + Area, tipologias_2002_2017_comunas, sum )
+resumen_tipologias = merge(resumen_tipologias,res_deptos, by = c("Año","Area"), all.x = TRUE)
+resumen_tipologias = merge(resumen_tipologias,res_otros, by = c("Año","Area"), all.x = TRUE)
+resumen_tipologias = mutate(resumen_tipologias, total = Casa + `Departamento en edificio` + otros)
+
+#porcentajes:
+resumen_tipologias = mutate(resumen_tipologias, porc_Casas = Casa * 100 / total)
+resumen_tipologias = mutate(resumen_tipologias, porc_Deptos = `Departamento en edificio` * 100 / total)
+resumen_tipologias = mutate(resumen_tipologias, porc_Otros = otros * 100 / total)
+
+rm(res_deptos, res_otros)
+```
+
+guarda tabla:
+```{r}
+
+saveRDS(resumen_tipologias, paste0("../datos/output/resumen_tipologias",p_caso_de_estudio,".RDS"))
+
+write.csv(resumen_tipologias, paste0( "../datos/output/resumen_tipologias",p_caso_de_estudio,".csv"), row.names = FALSE)
+
+```
+
+borra objetos:
+```{r}
+rm(tipologias_2002_2017, tipologias_2002_2017_comunas, resumen_tipologias)
+```
+

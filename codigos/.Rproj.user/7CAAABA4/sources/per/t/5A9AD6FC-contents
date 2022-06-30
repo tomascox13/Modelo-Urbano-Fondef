@@ -1,0 +1,73 @@
+
+carga librerias, paths y parametros:
+```{r message=FALSE, warning=FALSE}
+source(knitr::purl("./librerias paths y parametros.Rmd", quiet=TRUE))
+```
+
+carga zonas-loc area de estudio:
+```{r}
+#para caso de Temuco:
+if(p_caso_de_estudio == "Temuco"){
+  zonas_local_area_analisis = st_read("../datos/input/shapes/shapes censo 2017 Araucania/area_estudio_temuco.shp", crs = 32719) 
+}
+
+```
+
+carga permisos de edificación nacional y los filtra por area de estudio:
+fuente: https://www.ine.cl/herramientas/portal-de-mapas/geodatos-abiertos
+```{r}
+permisos_2010_21_nacional = st_read("C:/Users/tomas/OneDrive/Shapes/permisos de edificacion ine/georreferenciados/permisos_edificacion_2010_2021 wgs84_19s.shp", crs = 32719)
+
+permisos_area_estudio = st_intersection(permisos_2010_21_nacional, zonas_local_area_analisis)
+
+rm(permisos_2010_21_nacional)
+
+#renombra algunas variables:
+colnames(permisos_area_estudio)[which(names(permisos_area_estudio) == "A.d1.O")] <- "AÑO"
+```
+
+EDA permisos de edificación del área:
+```{r}
+#cantidad por año:
+View(aggregate(CANTIDAD_U ~ AÑO, permisos_area_estudio, sum))
+# por destino:
+View(aggregate(CANTIDAD_U ~ USO_DESTIN, permisos_area_estudio, sum))
+# por destino especifico:
+View(aggregate(CANTIDAD_U ~ GLOSA_DEST, permisos_area_estudio, sum))
+
+```
+
+
+genera tabla de cantidad de unidades de casas y de deptos por zona/loc censal del área de estudio:
+```{r}
+#clasifica en casa y departamento: 
+# casa = habitacional de 3 o menos pisos. 
+# depto = habitacional o mixto de 4 o más pisos.
+permisos_area_estudio = mutate(permisos_area_estudio, TIPO_TC = ifelse(USO_DESTIN == "HABITACIONAL" & NUM_PISOS < 4, "casa", ifelse((USO_DESTIN == "HABITACIONAL" | USO_DESTIN == "MIXTO") & NUM_PISOS >= 4, "departamento", "otro") ))
+
+#tabla resumen por zona/loc censal:
+tabla_unids_zona = aggregate(CANTIDAD_U ~ GEOCODIGO + TIPO_TC, permisos_area_estudio, sum)
+tabla_unids_zona = dcast(tabla_unids_zona, GEOCODIGO ~ TIPO_TC, value.var = "CANTIDAD_U")
+
+#genera shape de zonas con unidades localizadas:
+shp_unids_zonas = merge(zonas_local_area_analisis, tabla_unids_zona, by = "GEOCODIGO", all.x = TRUE)
+shp_unids_zonas$casa[is.na(shp_unids_zonas$casa)] = 0
+shp_unids_zonas$departamento[is.na(shp_unids_zonas$departamento)] = 0
+shp_unids_zonas$otro[is.na(shp_unids_zonas$otro)] = 0
+
+```
+
+guarda resultados:
+```{r}
+#shape con unidades por zona-loc censal:
+st_write(shp_unids_zonas, paste0( "../datos/output/shapes/unidades_zonas",p_caso_de_estudio,".shp"))
+
+#tabla de unidades por zona censal:
+saveRDS(tabla_unids_zona, paste0( "../datos/output/tabla_unids_zona",p_caso_de_estudio,".RDS"))
+
+```
+
+```{r}
+rm(permisos_area_estudio, tabla_unids_zona, zonas_local_area_analisis,shp_unids_zonas)
+```
+

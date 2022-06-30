@@ -1,0 +1,7 @@
+"0","#cantidad por año:"
+"0","View(aggregate(CANTIDAD_U ~ AÑO, permisos_area_estudio, sum))"
+"0","# por destino:"
+"0","View(aggregate(CANTIDAD_U ~ USO_DESTIN, permisos_area_estudio, sum))"
+"0","# por destino especifico:"
+"0","View(aggregate(CANTIDAD_U ~ GLOSA_DEST, permisos_area_estudio, sum))"
+"0",""

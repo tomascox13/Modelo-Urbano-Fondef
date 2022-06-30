@@ -1,0 +1,6 @@
+"0","#subset de comunas:"
+"0","proyecciones_2002_2035_comuna = proyecciones_2002_2035[proyecciones_2002_2035$`Nombre Comuna` %in% p_comunas,]"
+"0",""
+"0","#subset de cierto atributo: solo lo urbano:"
+"0","proyecciones_2002_2035_comuna_urb = subset(proyecciones_2002_2035_comuna, `Area (1=Urbano 2=Rural)`== 1)"
+"0",""

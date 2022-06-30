@@ -1,0 +1,130 @@
+
+
+
+carga librerias, paths y parametros:
+```{r message=FALSE, warning=FALSE}
+source(knitr::purl("./librerias paths y parametros.Rmd", quiet=TRUE))
+```
+ 
+carga microdatos del censo nacional 2017:
+Usa csv en direccion externa al proyecto:
+```{r}
+#para cargar todos los datos del censo (no alcanza la memoria), filtra por región 9 y guarda como RDS:
+Microdato_Censo2017_Personas = read.csv("C:/Users/tomas/OneDrive/Censo2017/Microdato_Censo2017-Personas/Microdato_Censo2017-Personas.csv",sep = ";")
+Microdato_Censo2017_Personas_Araucania = subset(Microdato_Censo2017_Personas, REGION == 9)
+
+saveRDS(Microdato_Censo2017_Personas_9, "../datos/output/Microdato_Censo2017_Personas_Araucania.RDS")
+```
+
+
+carga shape de zonas y localidades (censo 2017) que componen el area de analisis:
+
+Para el caso de Temuco, son las zonas y localidades que intersectan un buffer de 5 km. desde las zonas censales de Temuco urbano, P las Casas, Cajón y Portal Sn Fco.
+```{r}
+#para caso de Temuco:
+if(p_caso_de_estudio == "Temuco"){
+  zonas_local_area_analisis = st_read("../datos/input/shapes/shapes censo 2017 Araucania/area_estudio_temuco.shp", crs = 32719) 
+}
+
+```
+
+filtra personas solo de las comunas del area de estudio:
+```{r}
+#carga datos solo de la Región (ya filtrados anteriormente):
+if(p_caso_de_estudio == "Temuco"){
+  Microdato_Censo2017_Personas_Region = readRDS( "../datos/output/Microdato_Censo2017_Personas_Araucania.RDS")
+}
+
+# genera geocodigo de cada persona
+Microdato_Censo2017_Personas_Region = mutate(Microdato_Censo2017_Personas_Region, GEOCOD = as.numeric(paste0(COMUNA,ifelse(DC <= 9,paste0("0",DC),DC),ifelse(AREA == 1, 1000 + ZC_LOC, 2000 + ZC_LOC))))
+
+# filtra solo las personas en las zonas y localidades del área de estudio:
+geocods_zonasylocs_area_estudio = zonas_local_area_analisis$GEOCODIGO
+Microdato_Censo2017_Personas_AreaEstudio =  Microdato_Censo2017_Personas_Region [Microdato_Censo2017_Personas_Region$GEOCOD %in% geocods_zonasylocs_area_estudio,]
+rm(Microdato_Censo2017_Personas_Region)
+
+#filtra por la(s) comuna(s) del área de análisis (ya no se usa, se usa el anterior):
+#cod_comunas = p_cod_comunas$Comuna
+#Microdato_Censo2017_Personas_Comunas =  Microdato_Censo2017_Personas_Region [Microdato_Censo2017_Personas_Region$COMUNA %in% cod_comunas,]
+#rm(Microdato_Censo2017_Personas_Region)
+
+#guarda tabla de todas las personas de las comunas del area de estudio:
+saveRDS(Microdato_Censo2017_Personas_AreaEstudio, "../datos/output/Microdato_Censo2017_Personas_", p_caso_de_estudio,".RDS")
+
+```
+
+genera id de hogar:
+```{r}
+# genera ID de hogar:
+Microdato_Censo2017_Personas_AreaEstudio = mutate(Microdato_Censo2017_Personas_AreaEstudio, ID_HOG = paste0(GEOCOD,"-",NVIV,"-",NHOGAR))  
+```
+
+SEGMENTACIÓN:
+genera tabla de hogares con variables relevantes de segmentación:
+```{r}
+#hace tabla de hogares con ID de hogar:
+tabla_hogares = as.data.frame(unique(Microdato_Censo2017_Personas_AreaEstudio$ID_HOG))
+names(tabla_hogares) = c("ID_HOG")
+
+#edades maxima y minima en cada hogar:
+edad_max = aggregate(P09 ~ ID_HOG, Microdato_Censo2017_Personas_AreaEstudio, max)
+edad_min = aggregate(P09 ~ ID_HOG, Microdato_Censo2017_Personas_AreaEstudio, min)
+names(edad_max) = c("ID_HOG","edad_max_hog")
+names(edad_min) = c("ID_HOG","edad_min_hog")
+#nivel educacional del jefe de hogar:
+jefe_hog = subset(Microdato_Censo2017_Personas_AreaEstudio, P07 == 1)
+jefe_hog = jefe_hog[c("ID_HOG","ESCOLARIDAD")]
+#geocodigo:
+geoc = aggregate(GEOCOD ~ ID_HOG, Microdato_Censo2017_Personas_AreaEstudio, mean)
+
+#agrega a tabla de hogares:
+tabla_hogares = merge(tabla_hogares, jefe_hog, by = "ID_HOG", all.x = TRUE)
+tabla_hogares = merge(tabla_hogares, edad_max, by = "ID_HOG", all.x = TRUE)
+tabla_hogares = merge(tabla_hogares, edad_min, by = "ID_HOG", all.x = TRUE)
+tabla_hogares = merge(tabla_hogares, geoc, by = "ID_HOG", all.x = TRUE)
+
+rm(edad_max,edad_min,geoc,jefe_hog)
+```
+
+crea segmentos:
+```{r}
+
+#ciclo de vida:
+tabla_hogares = mutate(tabla_hogares, segm_edad = ifelse(edad_min_hog >=18 & edad_max_hog < 65, "indep",ifelse(edad_min_hog < 18 & edad_max_hog < 65, "cninos", "admayor" )))
+
+#educacional:
+tabla_hogares = mutate(tabla_hogares, segm_educ = ifelse(ESCOLARIDAD == 99 | ESCOLARIDAD <= 8, "basica", ifelse( ESCOLARIDAD <=12, "media", ifelse(ESCOLARIDAD < 17, "sup_incomp", "sup_comp"))))
+
+#segmentacion:
+tabla_hogares = mutate(tabla_hogares, segmento = paste0(segm_edad,"-",segm_educ))
+tabla_hogares = subset(tabla_hogares, !is.na(ESCOLARIDAD))
+
+#resumen:
+resumen_segmentos_hog = aggregate(ID_HOG ~ segmento, subset(tabla_hogares,!is.na(ESCOLARIDAD)), length)
+
+```
+
+añade hogares por segmento a shape para guardar shpe y visualizar en QGIS:
+```{r}
+hogs_zonas = aggregate(ID_HOG ~ GEOCOD + segmento, tabla_hogares, length)
+hogs_zonas = dcast(hogs_zonas, GEOCOD ~ segmento, value.var = "ID_HOG")
+
+zonas_local_area_analisis = merge(zonas_local_area_analisis, hogs_zonas,by.x = "GEOCODIGO", by.y = "GEOCOD", all.x = TRUE)
+
+```
+
+
+guarda tablas y shpe:
+```{r}
+saveRDS(tabla_hogares, paste0(dir_datos, "/output/tabla_hogares",p_caso_de_estudio,".RDS"))
+
+write.csv(resumen_segmentos_hog, "../datos/output/resumen_segmentos_hog_",p_caso_de_estudio,".csv", row.names = FALSE)
+
+st_write(zonas_local_area_analisis, "../datos/output/shapes/segmentos_hog_",p_caso_de_estudio,".shp")
+```
+
+elimina objetos:
+```{r}
+rm(tabla_hogares, resumen_segmentos_hog, Microdato_Censo2017_Personas_AreaEstudio, zonas_local_area_analisis,geocods_zonasylocs_area_estudio, hogs_zonas)
+```
+

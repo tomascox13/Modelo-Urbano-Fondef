@@ -1,0 +1,1 @@
+"0","calcula_dist_x_red = readRDS(paste0(dir_datos, ""/output/funcion calculo distancia al mas cercano por la red.RDS""))"

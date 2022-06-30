@@ -1,0 +1,3 @@
+"0","cod_comunas = p_cod_comunas$Comuna"
+"0","tipologias_2002_2017_comunas =  tipologias_2002_2017 [tipologias_2002_2017$`Codigo INE Comuna` %in% cod_comunas,]"
+"0",""

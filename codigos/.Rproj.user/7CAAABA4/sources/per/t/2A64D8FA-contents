@@ -1,0 +1,85 @@
+
+
+Calcula para cada zona/loc Censal del área de estudio:
+
+
+carga librerias, paths y parametros:
+```{r message=FALSE, warning=FALSE}
+source(knitr::purl("./librerias paths y parametros.Rmd", quiet=TRUE))
+```
+
+carga zonas-loc area de estudio, centro de la ciudad y red vial de osm:
+```{r message=FALSE, warning=FALSE}
+#para caso de Temuco:
+if(p_caso_de_estudio == "Temuco"){
+  #zonas/loc censales de base:
+  zonas_local_area_analisis = st_read("../datos/input/shapes/shapes censo 2017 Araucania/area_estudio_temuco.shp", crs = 32719) 
+  #cento de la ciudad:
+  centro = st_read("../datos/input/shapes/centro temuco.shp", crs = 32719) 
+}
+#red vial:
+roads = st_read( paste0( "../datos/output/shapes/roads_",p_caso_de_estudio,".shp"))
+#tabla con norma por zona/loc censal (precalculada en modulo de normativa):
+norma_zonaloc = readRDS(paste0( "../datos/output/zonas_local_con_vivs_permtid_",p_caso_de_estudio,".RDS")) 
+  
+  
+```
+
+carga funciones:
+```{r}
+calcula_dist_x_red = readRDS("../datos/output/funcion calculo distancia al mas cercano por la red.RDS")
+```
+
+
+crea un df con solo los ID de cada zona censal del área de estudio:
+```{r}
+tbl_zonas = zonas_local_area_analisis[c("GEOCODIGO")]
+
+```
+
+
+distancia al centro por la red:
+```{r}
+#funcion de dist requiere de input en 4326:
+origenes = st_transform(st_centroid(zonas_local_area_analisis), crs = 4326)
+destinos = st_transform(centro, crs = 4326)
+red_vial = st_transform(roads, crs = 4326)
+
+#función requiere un campo de ID:
+origenes = mutate(origenes, ID = GEOCODIGO)
+destinos = mutate(destinos, ID = 1)
+
+#aplica función de calculo de deistancias al más cercano por la red:
+dist_centro = calcula_dist_x_red(origenes, destinos, red_vial)
+names(dist_centro) = c("dist_centro", "GEOCODIGO" )
+
+#agrega distancias a tabla de zonas/loc:
+tbl_zonas =  merge(tbl_zonas, dist_centro, by = "GEOCODIGO", all.x = TRUE)
+
+rm(origenes, destinos,red_vial,dist_centro)
+
+```
+
+agrega normativa:
+```{r}
+tbl_zonas = merge(tbl_zonas, st_drop_geometry(norma_zonaloc[c("GEOCODIGO","vivs_permitidas")]), by="GEOCODIGO",all.x = TRUE)
+
+```
+
+
+guarda sf de zonas con atributos:
+```{r}
+saveRDS(tbl_zonas, paste0("../datos/output/tabla_atribs_zonasloc",p_caso_de_estudio,".RDS")) 
+st_write(tbl_zonas, paste0( "../datos/output/shapes/atribs_zonasloc",p_caso_de_estudio,".shp")) 
+
+```
+
+
+```{r}
+rm(centro, norma_zonaloc,roads, tbl_zonas,zonas_local_area_analisis, calcula_dist_x_red)
+```
+ carga lo guardado:
+```{r}
+tbl_zonas = readRDS(paste0( "../datos/output/tabla_atribs_zonasloc",p_caso_de_estudio,".RDS")) 
+```
+

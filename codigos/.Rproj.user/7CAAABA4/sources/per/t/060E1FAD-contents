@@ -1,0 +1,54 @@
+
+
+carga librerias, paths y parametros:
+```{r message=FALSE, warning=FALSE}
+source(knitr::purl("./librerias paths y parametros.Rmd", quiet=TRUE))
+```
+
+carga zonas-loc area de estudio (para definir la bbox para OSM):
+```{r}
+#para caso de Temuco:
+if(p_caso_de_estudio == "Temuco"){
+  zonas_local_area_analisis = st_read("../datos/input/shapes/shapes censo 2017 Araucania/area_estudio_temuco.shp", crs = 32719) 
+}
+
+```
+
+extrae red vial desde OSM:
+```{r}
+#crea bounding box de buffer para extraccion de datos OSM:
+bb_polig_user <- st_bbox(st_transform(zonas_local_area_analisis,crs=4326))
+osm_bb <- matrix(nrow=2,ncol=2,data=c( bb_polig_user[1], bb_polig_user[2],  bb_polig_user[3], bb_polig_user[4]), dimnames = list(c("x", "y"),c("min","max")))
+
+#extrae la vialidad:
+roads <- opq(bbox = osm_bb) %>% add_osm_feature(key = "highway") %>% osmdata_sf () %>% `[[`("osm_lines")
+
+```
+
+elige algunos tipos de ruta para guardar:
+```{r}
+# tipos a elegir:
+tipos_roads = c("motorway","tertiary","secondary", "primary", "residential","primary_link", "motorway_link")
+#todos los tipos: "motorway", "tertiary", "secondary", "unclassified", "service", "primary", "residential" ,"primary_link"   "construction","pedestrian", "living_street", "motorway_link", "footway" ,"secondary_link" "track", "cycleway","steps" , "tertiary_link","path" , "road","raceway", NA
+
+#elige:
+roads_s = roads[roads$highway %in% tipos_roads, ]
+
+```
+
+elimina vias no conectadas con la red ppal:
+```{r}
+inter <- st_intersects(st_as_sf(roads_s),st_as_sf(roads_s), sparse = TRUE)
+roads_s <- roads_s[lengths(inter)>5,]
+```
+
+
+guarda shape:
+```{r}
+st_write(roads_s[c("osm_id","name","highway")], paste0( "../datos/output/shapes/roads_",p_caso_de_estudio,".shp"))
+```
+
+carga lo guardado:
+```{r}
+roads_s = st_read( paste0("../datos/output/shapes/roads_",p_caso_de_estudio,".shp"))
+```
